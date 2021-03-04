@@ -9,12 +9,12 @@ import (
 func evalTest(t *testing.T, s string, correct interface{}, scope Scope) {
 	x, err := Parse(s)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("%s %s", err, s)
 	}
 
 	y, err := Eval(x, scope)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("%s %s", err, s)
 	}
 
 	assert.Equal(t, correct, y.Primitive())
@@ -23,7 +23,7 @@ func evalTest(t *testing.T, s string, correct interface{}, scope Scope) {
 func TestPriimitives(t *testing.T) {
 	scope := Scope{}
 
-	evalTest(t, "5", 5, scope)
+	evalTest(t, "5", 5.0, scope)
 	evalTest(t, "5.3", 5.3, scope)
 	evalTest(t, "\"abc\"", "abc", scope)
 }
@@ -31,6 +31,7 @@ func TestPriimitives(t *testing.T) {
 func TestMath1(t *testing.T) {
 	scope := Scope{}
 	evalTest(t, "(+ 1 2.1)", 3.1, scope)
+	evalTest(t, "(+ 1 2.1 -1)", 2.1, scope)
 	evalTest(t, "(+ 1 2.1 1.1)", 4.2, scope)
 
 	evalTest(t, "(* 2 2.1)", 4.2, scope)
@@ -41,4 +42,6 @@ func TestMath1(t *testing.T) {
 	evalTest(t, "(- raw 1100)", 401.0, scope)
 
 	evalTest(t, "(/ (- raw 1100) 10)", 40.1, scope)
+
+	//evalTest(t, "(max -3.1 0.1)", 0.1, scope)
 }

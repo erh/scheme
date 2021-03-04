@@ -2,9 +2,9 @@ package scheme
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/alecthomas/participle/v2"
+	"github.com/alecthomas/participle/v2/lexer/stateful"
 )
 
 type Boolean bool
@@ -16,7 +16,6 @@ func (b *Boolean) Capture(values []string) error {
 
 type Value struct {
 	Float   *float64 `  @Float`
-	Int     *int     `| @Int`
 	Bool    *Boolean `| @("true" | "false")`
 	AString *string  `| @String`
 	Func    SchemeFunction
@@ -27,20 +26,12 @@ func (v Value) ToFloat() (float64, error) {
 		return *v.Float, nil
 	}
 
-	if v.Int != nil {
-		return float64(*v.Int), nil
-	}
-
-	return 0, fmt.Errorf("not a number")
+	return 0, fmt.Errorf("not a number (%s)", v.String())
 }
 
 func (v Value) Primitive() interface{} {
 	if v.Float != nil {
 		return *v.Float
-	}
-
-	if v.Int != nil {
-		return *v.Int
 	}
 
 	if v.Bool != nil {
@@ -49,7 +40,7 @@ func (v Value) Primitive() interface{} {
 
 	if v.AString != nil {
 		s := *v.AString
-		return s[1 : len(s)-1]
+		return s
 	}
 
 	panic("help")
@@ -58,10 +49,6 @@ func (v Value) Primitive() interface{} {
 func (v Value) String() string {
 	if v.Float != nil {
 		return fmt.Sprintf("%v", *v.Float)
-	}
-
-	if v.Int != nil {
-		return strconv.Itoa(*v.Int)
 	}
 
 	if v.AString != nil {
@@ -80,10 +67,10 @@ func (v Value) String() string {
 }
 
 type Expression struct {
-	Call   []*Expression `"(" @@+ ")" |`
-	Val    *Value        `@@ |`
-	Var    *string       `@Ident |`
-	Symbol *string       `@("=" | "<" "=" | ">" "=" | "<" | ">" | "!" | "=" | "+" | "-" | "*" | "/" )`
+	Call   []*Expression `"(" @@+ ")"|`
+	Val    *Value        `@@|`
+	Var    *string       `@Ident|`
+	Symbol *string       `@Symbol`
 }
 
 func (e Expression) String() string {
@@ -112,10 +99,26 @@ func (e Expression) String() string {
 }
 
 var (
-	schemeParser = participle.MustBuild(&Expression{})
+	schemeLexer = stateful.MustSimple([]stateful.Rule{
+		{"Ident", `[a-zA-Z]\w*`, nil},
+		{"Float", `[-+]?\d*\.?\d+([eE][-+]?\d+)?`, nil},
+		{"String", `"(\\"|[^"])*"`, nil},
+		{"Whitespace", `[ \t\n\r]+`, nil},
+		{"Symbol", "(=|<=|\\+|\\*|-|/)", nil},
+		{"EOL", `[\n\r]+`, nil},
+		{"Punct", `[-[!@#$%^&*()+_={}\|:;"'<,>.?/]|]`, nil},
+	})
+
+	schemeParser = participle.MustBuild(
+		&Expression{},
+		participle.Lexer(schemeLexer),
+		participle.Unquote("String"),
+		participle.Elide("Whitespace"),
+	)
 )
 
 func Parse(s string) (*Expression, error) {
+
 	e := &Expression{}
 	err := schemeParser.ParseString("", s, e)
 	return e, err
