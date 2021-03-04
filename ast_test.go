@@ -7,7 +7,7 @@ import (
 )
 
 func Test1(t *testing.T) {
-	x, err := parse("(foo bar)") // 5 3)")
+	x, err := Parse("(foo bar)") // 5 3)")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -16,7 +16,7 @@ func Test1(t *testing.T) {
 }
 
 func Test2(t *testing.T) {
-	x, err := parse("(foo 5 3.3)")
+	x, err := Parse("(foo 5 3.3)")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -27,7 +27,7 @@ func Test2(t *testing.T) {
 }
 
 func Test3(t *testing.T) {
-	x, err := parse("(+ 5 3.3)")
+	x, err := Parse("(+ 5 3.3)")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func Test3(t *testing.T) {
 }
 
 func Test4(t *testing.T) {
-	x, err := parse("(+ 5 (+1 4))")
+	x, err := Parse("(+ 5 (+1 4))")
 	if err != nil {
 		t.Fatal(err)
 	}

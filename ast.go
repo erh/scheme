@@ -115,7 +115,7 @@ var (
 	schemeParser = participle.MustBuild(&Expression{})
 )
 
-func parse(s string) (*Expression, error) {
+func Parse(s string) (*Expression, error) {
 	e := &Expression{}
 	err := schemeParser.ParseString("", s, e)
 	return e, err

@@ -7,7 +7,7 @@ import (
 )
 
 func evalTest(t *testing.T, s string, correct interface{}, scope Scope) {
-	x, err := parse(s)
+	x, err := Parse(s)
 	if err != nil {
 		t.Fatal(err)
 	}
