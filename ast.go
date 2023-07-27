@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alecthomas/participle/v2"
-	"github.com/alecthomas/participle/v2/lexer/stateful"
+	"github.com/alecthomas/participle/v2/lexer"
 )
 
 type Boolean bool
@@ -99,18 +99,16 @@ func (e Expression) String() string {
 }
 
 var (
-	schemeLexer = stateful.MustSimple([]stateful.Rule{
-		{"Ident", `[a-zA-Z]\w*`, nil},
-		{"Float", `[-+]?\d*\.?\d+([eE][-+]?\d+)?`, nil},
-		{"String", `"(\\"|[^"])*"`, nil},
-		{"Whitespace", `[ \t\n\r]+`, nil},
-		{"Symbol", "(=|<=|\\+|\\*|-|/)", nil},
-		{"EOL", `[\n\r]+`, nil},
-		{"Punct", `[-[!@#$%^&*()+_={}\|:;"'<,>.?/]|]`, nil},
+	schemeLexer = lexer.MustSimple([]lexer.SimpleRule{
+		{"Ident", `[a-zA-Z]\w*`},
+		{"Float", `[-+]?\d*\.?\d+([eE][-+]?\d+)?`},
+		{"String", `"(\\"|[^"])*"`},
+		{"Whitespace", `[ \t\n\r]+`},
+		{"Symbol", "(=|<=|\\+|\\*|-|/)"},
+		{"EOL", `[\n\r]+`},
+		{"Punct", `[-[!@#$%^&*()+_={}\|:;"'<,>.?/]|]`},
 	})
-
-	schemeParser = participle.MustBuild(
-		&Expression{},
+	schemeParser = participle.MustBuild[Expression](
 		participle.Lexer(schemeLexer),
 		participle.Unquote("String"),
 		participle.Elide("Whitespace"),
@@ -118,8 +116,5 @@ var (
 )
 
 func Parse(s string) (*Expression, error) {
-
-	e := &Expression{}
-	err := schemeParser.ParseString("", s, e)
-	return e, err
+	return schemeParser.ParseString("", s)
 }
